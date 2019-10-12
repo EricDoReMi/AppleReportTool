@@ -34,17 +34,12 @@ namespace AppleDailyReportTool.control
                 string saveMailName = myGuid + myItem.ReceivedTime.ToString("yyyyMMddHHmmss");//邮件保存在公共盘上的名字
                 string saveMailNamePath = MailHelper.MailFolder + saveMailName + ".msg";
 
-
                 List<String> attachmentsList=SaveAttachments(myItem);
-
 
                 AddMailToDB(myItem, attachmentsList, saveMailNamePath);//将接收到的邮件信息添加到数据库
 
                 SaveMailItemToDisk(myItem, saveMailNamePath);//将邮件保存到公共盘
                 myItem.Move(MailHelper.mySourceFolder);//将邮件移动到了Source文件夹
-             
-
-
 
             }
 
