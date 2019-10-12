@@ -25,7 +25,7 @@ namespace AppleDailyReportTool.utils
 
             persistSecurityStr = ConfigurationManager.AppSettings["PersistSecurityStr"];
 
-
+            dataSourceStr = ConfigurationManager.AppSettings["DataSourceStr"];
 
 
         }

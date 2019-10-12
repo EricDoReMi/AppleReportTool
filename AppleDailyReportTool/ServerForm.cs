@@ -81,5 +81,21 @@ namespace AppleDailyReportTool
             }
         }
 
+ 
+
+        private void TxtServerStatus_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void dateTimePickerStartTime_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

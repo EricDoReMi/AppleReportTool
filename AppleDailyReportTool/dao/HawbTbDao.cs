@@ -14,7 +14,7 @@ namespace AppleDailyReportTool.dao
         public void AddHawbTbItemDAO(OleDbConnection conn, HawbTb hawbTb)
         {
 
-            string sqlStr = @"INSERT INTO HawbTb (HAWBNo,HAWBTitle,AppleId,Shipper,SapPlantCode,Org,Coc,Poe,TotalCtn,TotalPlt,TotalWeigth,TotalVolumn,MailIncomeTime,FilePath,MailSubject) VALUES(@HAWBNo,@HAWBTitle,@AppleId,@Shipper,@SapPlantCode,@Org,@Coc,@Poe,@TotalCtn,@TotalPlt,@TotalWeigth,@TotalVolumn,@MailIn@comeTime,@FilePath,@MailSubject)";
+            string sqlStr = @"INSERT INTO HawbTb (HAWBNo,HAWBTitle,AppleId,Shipper,SapPlantCode,Org,Coc,Poe,TotalCtn,TotalPlt,TotalWeigth,TotalVolumn,MailIncomeTime,FilePath,MailSubject) VALUES(@HAWBNo,@HAWBTitle,@AppleId,@Shipper,@SapPlantCode,@Org,@Coc,@Poe,@TotalCtn,@TotalPlt,@TotalWeigth,@TotalVolumn,@MailIncomeTime,@FilePath,@MailSubject)";
             OleDbParameter[] paras = hawbTb.ToInsertByParamArray();
 
             ExecuteSQLNonquery(conn, sqlStr, paras);

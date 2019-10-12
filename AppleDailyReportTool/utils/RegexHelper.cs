@@ -90,5 +90,30 @@ namespace AppleDailyReportTool.utils
 
 
         }
+
+        /// <summary>
+        /// 通过这则表达式获得指定group的值
+        /// </summary>
+        /// <param name="strFiles"></param>
+        /// <returns></returns>
+        public static String GetGroupStrByReg(string strFiles,string regex,int groupIndex)
+        {
+
+            String returnStr = "";
+
+            
+
+            Match mc = Regex.Match(strFiles, regex);
+
+            if (mc.Success)
+            {
+
+
+                returnStr = mc.Groups[groupIndex].Value.Trim();
+
+            }
+
+            return returnStr;
+        }
     }
 }

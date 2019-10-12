@@ -42,7 +42,7 @@
             // 
             // btnServerStart
             // 
-            this.btnServerStart.Location = new System.Drawing.Point(12, 39);
+            this.btnServerStart.Location = new System.Drawing.Point(12, 19);
             this.btnServerStart.Name = "btnServerStart";
             this.btnServerStart.Size = new System.Drawing.Size(58, 41);
             this.btnServerStart.TabIndex = 1;
@@ -52,7 +52,7 @@
             // 
             // btnServerStop
             // 
-            this.btnServerStop.Location = new System.Drawing.Point(101, 39);
+            this.btnServerStop.Location = new System.Drawing.Point(89, 19);
             this.btnServerStop.Name = "btnServerStop";
             this.btnServerStop.Size = new System.Drawing.Size(60, 41);
             this.btnServerStop.TabIndex = 4;
@@ -63,7 +63,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(246, 53);
+            this.label1.Location = new System.Drawing.Point(171, 19);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(41, 12);
             this.label1.TabIndex = 5;
@@ -74,29 +74,31 @@
             this.TxtServerStatus.BackColor = System.Drawing.SystemColors.Window;
             this.TxtServerStatus.Font = new System.Drawing.Font("宋体", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.TxtServerStatus.ForeColor = System.Drawing.Color.Red;
-            this.TxtServerStatus.Location = new System.Drawing.Point(309, 39);
+            this.TxtServerStatus.Location = new System.Drawing.Point(231, 19);
             this.TxtServerStatus.Name = "TxtServerStatus";
             this.TxtServerStatus.ReadOnly = true;
-            this.TxtServerStatus.Size = new System.Drawing.Size(111, 44);
+            this.TxtServerStatus.Size = new System.Drawing.Size(99, 44);
             this.TxtServerStatus.TabIndex = 6;
             this.TxtServerStatus.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.TxtServerStatus.TextChanged += new System.EventHandler(this.TxtServerStatus_TextChanged);
             // 
             // dateTimePickerStartTime
             // 
             this.dateTimePickerStartTime.CustomFormat = "HH:mm";
             this.dateTimePickerStartTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePickerStartTime.Location = new System.Drawing.Point(12, 132);
+            this.dateTimePickerStartTime.Location = new System.Drawing.Point(12, 130);
             this.dateTimePickerStartTime.Name = "dateTimePickerStartTime";
             this.dateTimePickerStartTime.ShowUpDown = true;
             this.dateTimePickerStartTime.Size = new System.Drawing.Size(123, 21);
             this.dateTimePickerStartTime.TabIndex = 7;
             this.dateTimePickerStartTime.Value = new System.DateTime(2019, 5, 6, 7, 30, 0, 0);
+            this.dateTimePickerStartTime.ValueChanged += new System.EventHandler(this.dateTimePickerStartTime_ValueChanged);
             // 
             // dateTimePickerStopTime
             // 
             this.dateTimePickerStopTime.CustomFormat = "HH:mm";
             this.dateTimePickerStopTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePickerStopTime.Location = new System.Drawing.Point(248, 132);
+            this.dateTimePickerStopTime.Location = new System.Drawing.Point(173, 130);
             this.dateTimePickerStopTime.Name = "dateTimePickerStopTime";
             this.dateTimePickerStopTime.ShowUpDown = true;
             this.dateTimePickerStopTime.Size = new System.Drawing.Size(123, 21);
@@ -106,16 +108,17 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(20, 108);
+            this.label2.Location = new System.Drawing.Point(12, 94);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(59, 12);
             this.label2.TabIndex = 9;
             this.label2.Text = "StartTime";
+            this.label2.Click += new System.EventHandler(this.label2_Click);
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(246, 108);
+            this.label3.Location = new System.Drawing.Point(171, 94);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(53, 12);
             this.label3.TabIndex = 10;
@@ -131,7 +134,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(491, 190);
+            this.ClientSize = new System.Drawing.Size(564, 328);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.dateTimePickerStopTime);

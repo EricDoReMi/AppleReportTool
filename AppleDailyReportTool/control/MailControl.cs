@@ -39,6 +39,7 @@ namespace AppleDailyReportTool.control
 
 
                 AddMailToDB(myItem, attachmentsList, saveMailNamePath);//将接收到的邮件信息添加到数据库
+
                 SaveMailItemToDisk(myItem, saveMailNamePath);//将邮件保存到公共盘
                 myItem.Move(MailHelper.mySourceFolder);//将邮件移动到了Source文件夹
              
@@ -96,8 +97,6 @@ namespace AppleDailyReportTool.control
         private void AddMailToDB(Outlook.MailItem myItem, List<String> attachmentsList, string saveMailNamePath)
         {
 
-           
-
 
             if (attachmentsList.Count > 0)
             {
@@ -118,23 +117,64 @@ namespace AppleDailyReportTool.control
 
                     string strFiles = File.ReadAllText(attachFilePath);
                    
-                    strFiles = strFiles.Replace("<k>", "").Replace("<BR>", "\n");
+                    strFiles = strFiles.Replace("<k>", "").Replace("<BR>", "\n").Replace("&nbsp;", " ");
 
-                    string 
+                    hawbTb.HAWBNo = Path.GetFileNameWithoutExtension(attachFilePath);
 
-                    string tableMain=RegexHelper.GetFirstStrByRegex("<TABLE Border.+?</TABLE>", strFiles);
+
+                    hawbTb.HAWBTitle=RegexHelper.GetGroupStrByReg(strFiles, @"<B>(.*?)</B>",1);
+
+                    hawbTb.AppleId = RegexHelper.GetGroupStrByReg(strFiles, @"APPLE ID :(.*?)</TD>", 1);
+
+                    hawbTb.Shipper = RegexHelper.GetGroupStrByReg(strFiles, @"Shipper :(.*?)</TD>", 1);
+
+                    hawbTb.SapPlantCode = RegexHelper.GetGroupStrByReg(strFiles, @"SAP Plant Code :(.*?)</TD>", 1);
+
+                    hawbTb.Org = RegexHelper.GetGroupStrByReg(strFiles, @"ORG :(.*?)</TD>", 1);
+
+                    hawbTb.Coc = RegexHelper.GetGroupStrByReg(strFiles, @"COC :(.*?)</TD>", 1);
+
+                    hawbTb.Poe= RegexHelper.GetGroupStrByReg(strFiles, @"POE :(.*?)</TD>", 1);
+
+                    hawbTb.TotalCtn = RegexHelper.GetGroupStrByReg(strFiles, @"Total CTN :(.*?)</TD>", 1);
+
+                    hawbTb.TotalPlt = RegexHelper.GetGroupStrByReg(strFiles, @"Total PLT :(.*?)</TD>", 1);
+
+                    hawbTb.TotalWeigth = RegexHelper.GetGroupStrByReg(strFiles, @"Total Weight (KG) :(.*?)</TD>", 1);
+
+                    hawbTb.TotalVolumn = RegexHelper.GetGroupStrByReg(strFiles, @"Total Volume (CBM) :(.*?)</TD>", 1);
+
+                    AddHawbTbToDB(hawbTb);
+
+                    string tableMain =RegexHelper.GetFirstStrByRegex("<TABLE Border.+?</TABLE>", strFiles);
 
                     XmlDocument doc = new XmlDocument();
                     doc.LoadXml(tableMain);
                     XmlNodeList trs = doc.GetElementsByTagName("TR");
-                    XmlNodeList tds = trs[1].ChildNodes;
-                    foreach (XmlNode td in tds)
+
+                    List<ApplePoTb> applePoTbLists = new List<ApplePoTb>();
+
+                    for (int i = 1; i < trs.Count; i++)
                     {
-                        string strTd = td.InnerText;
-                        
+                        ApplePoTb applePoTb = new ApplePoTb();
+                        XmlNodeList tds = trs[i].ChildNodes;
+                        applePoTb.ApplePo=tds[0].InnerText.Trim();
+                        applePoTb.ShipTo = tds[1].InnerText.Trim();
+                        applePoTb.Ctn = tds[2].InnerText.Trim();
+                        applePoTb.Plt = tds[3].InnerText.Trim();
+                        applePoTb.Weight = tds[4].InnerText.Trim();
+                        applePoTb.Volume = tds[5].InnerText.Trim();
+                        applePoTb.PNContained = tds[6].InnerText.Trim();
+                        applePoTb.CustomerPoid = tds[7].InnerText.Trim();
+
+                        applePoTbLists.Add(applePoTb);
+
                     }
 
-                    
+                    BathAddApplePoTbToDB(applePoTbLists);
+
+
+
 
                 }
             }
@@ -156,7 +196,7 @@ namespace AppleDailyReportTool.control
                 hawbTb.FilePath = saveMailNamePath;
 
                 //将邮件记录添加到DB中
-                //AddRecordToDB(hawbTb);
+                AddHawbTbToDB(hawbTb);
 
 
             }
@@ -171,55 +211,97 @@ namespace AppleDailyReportTool.control
 
 
 
-  
+        private void AddApplePoTbToDB(ApplePoTb applePoTb)
+        {
+            try
+            {
+                OleDbConnection con = applePoTbDao.Begin();
+                applePoTbDao.AddApplePoTbItemDAO(con, applePoTb);
+                applePoTbDao.Commit();
+
+            }
+            catch (Exception)
+            {
+                applePoTbDao.RollBack();
+                throw;
+            }
+            finally
+            {
+                applePoTbDao.Close();
+            }
+        }
+
+        private void BathAddApplePoTbToDB(List<ApplePoTb> applePoTbs)
+        {
+            try
+            {
+                OleDbConnection con = applePoTbDao.Begin();
+                foreach (ApplePoTb applePoTb in applePoTbs)
+                {
+                    applePoTbDao.AddApplePoTbItemDAO(con, applePoTb);
+                }
+
+                applePoTbDao.Commit();
+
+            }
+            catch (Exception)
+            {
+                applePoTbDao.RollBack();
+                throw;
+            }
+            finally
+            {
+                applePoTbDao.Close();
+            }
+        }
 
         /// <summary>
-        /// 向数据库添加单条Record的记录 
+        /// 向数据库添加单条HawbTb的记录 
         /// </summary>
-        /// <param name="record"></param>
-        //private void AddRecordToDB(HawbTb record)
-        //{
-        //    try
-        //    {
-        //        OleDbConnection con = recordDao.Begin();
-        //        recordDao.AddRecordItemDAO(con, record);
-        //        recordDao.Commit();
+        /// <param name = "hawbTb" ></ param >
+        private void AddHawbTbToDB(HawbTb hawbTb)
+        {
+            try
+            {
+                OleDbConnection con = hawbTbDao.Begin();
+                hawbTbDao.AddHawbTbItemDAO(con, hawbTb);
+                hawbTbDao.Commit();
 
-        //    }
-        //    catch (Exception)
-        //    {
-        //        recordDao.RollBack();
-        //        throw;
-        //    }
-        //    finally
-        //    {
-        //        recordDao.Close();
-        //    }
-        //}
+            }
+            catch (Exception)
+            {
+                hawbTbDao.RollBack();
+                throw;
+            }
+            finally
+            {
+                hawbTbDao.Close();
+            }
+        }
 
-        //private void BathAddRecordsToDB(List<Record> records)
-        //{
-        //    try
-        //    {
-        //        OleDbConnection con = recordDao.Begin();
-        //        foreach (Record record in records)
-        //        {
-        //            recordDao.AddRecordItemDAO(con, record);
-        //        }
+        private void BathAddHawbTbToDB(List<HawbTb> hawbTbs)
+        {
+            try
+            {
+                OleDbConnection con = hawbTbDao.Begin();
+                foreach (HawbTb hawbTb in hawbTbs)
+                {
+                    hawbTbDao.AddHawbTbItemDAO(con, hawbTb);
+                }
 
-        //        recordDao.Commit();
+                hawbTbDao.Commit();
 
-        //    }
-        //    catch (Exception)
-        //    {
-        //        recordDao.RollBack();
-        //        throw;
-        //    }
-        //    finally
-        //    {
-        //        recordDao.Close();
-        //    }
-        //}
+            }
+            catch (Exception)
+            {
+                hawbTbDao.RollBack();
+                throw;
+            }
+            finally
+            {
+                hawbTbDao.Close();
+            }
+        }
 
 
 
