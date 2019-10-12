@@ -21,7 +21,7 @@ namespace AppleDailyReportTool.utils
         {
 
             string returnStr = "";
-            Regex regex = new Regex(regexStr, RegexOptions.IgnoreCase);
+            Regex regex = new Regex(regexStr,RegexOptions.Singleline);
 
             MatchCollection matchs = regex.Matches(context);
             foreach (Match match in matchs)

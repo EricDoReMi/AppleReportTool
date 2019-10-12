@@ -1,0 +1,5 @@
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\Debug\AppleDailyReportTool.csprojAssemblyReference.cache
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\Debug\AppleDailyReportTool.Properties.Resources.resources
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\Debug\AppleDailyReportTool.ServerForm.resources
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\Debug\AppleDailyReportTool.csproj.GenerateResource.cache
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\Debug\AppleDailyReportTool.csproj.CoreCompileInputs.cache

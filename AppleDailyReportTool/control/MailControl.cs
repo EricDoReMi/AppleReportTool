@@ -9,41 +9,67 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
-
+using System.IO;
+using System.Xml;
 
 namespace AppleDailyReportTool.control
 {
     public partial class MailControl
     {
-        private EmpDAO empDao = new EmpDAO();
-        private RecordDAO recordDao = new RecordDAO();
+        private ApplePoTbDao applePoTbDao = new ApplePoTbDao();
+        private HawbTbDao hawbTbDao = new HawbTbDao();
 
-        private static long mailNum = 0;//用于标记邮件个数,存储邮件时作为唯一标识
         /// <summary>
         /// 将邮件内容存放到数据库中
         /// </summary>
         public void TransferMail()
         {
 
-
-
-
             foreach (Outlook.MailItem myItem in MailHelper.myFolderInbox.Items)
             {
 
                 string mailAddress = myItem.SenderEmailAddress.Trim();
-                string saveMailItemPath; //将邮件存到公共盘的路径  
 
-                AddMailToDB(myItem, out saveMailItemPath);//将接收到的邮件信息添加到数据库
-                SaveMailItemToDisk(myItem, saveMailItemPath);//将邮件保存到公共盘
+                string myGuid = Guid.NewGuid().ToString();
+                string saveMailName = myGuid + myItem.ReceivedTime.ToString("yyyyMMddHHmmss");//邮件保存在公共盘上的名字
+                string saveMailNamePath = MailHelper.MailFolder + saveMailName + ".msg";
+
+
+                List<String> attachmentsList=SaveAttachments(myItem);
+
+
+                AddMailToDB(myItem, attachmentsList, saveMailNamePath);//将接收到的邮件信息添加到数据库
+                SaveMailItemToDisk(myItem, saveMailNamePath);//将邮件保存到公共盘
                 myItem.Move(MailHelper.mySourceFolder);//将邮件移动到了Source文件夹
-                mailNum++;
+             
 
-                preAsignRequest();
+
 
             }
 
 
+        }
+
+        /// <summary>
+        /// 将邮件附件存到共享盘里面
+        /// </summary>
+        /// <param name="myItem">邮件的Item</param>
+        /// <returns>邮件附件的路径列表</returns>
+        private List<String> SaveAttachments(Outlook.MailItem myItem)
+        {
+            List<String> attachmentsList = new List<string>();
+
+            for (int i = 1; i < myItem.Attachments.Count+1; i++)
+            {
+                
+                string saveAttachPath = MailHelper.AttachFolder + myItem.Attachments[i].FileName;
+
+                myItem.Attachments[i].SaveAsFile(saveAttachPath);
+
+                attachmentsList.Add(saveAttachPath);
+            }
+
+            return attachmentsList;
         }
 
 
@@ -61,446 +87,139 @@ namespace AppleDailyReportTool.control
         }
 
 
+        
         /// <summary>
-        /// 将邮件信息存储到数据库中
+        /// 将信息添加到数据库
         /// </summary>
-        /// <param name="myItem">邮件Item</param>
-        /// <param name="saveMailNamePath">传出参数，传出要存储的路径</param>
-        private void AddMailToDB(Outlook.MailItem myItem, out string saveMailNamePath)
+        /// <param name="myItem"></param>
+        /// <param name="attachmentsList"></param>
+        private void AddMailToDB(Outlook.MailItem myItem, List<String> attachmentsList, string saveMailNamePath)
         {
 
-            Record record = new Record();
+           
 
-            if (myItem.Subject != null)
+
+            if (attachmentsList.Count > 0)
             {
-                record.M_subject = myItem.Subject.Trim();//邮件主题
-            }
-
-            if (myItem.Importance != null)
-            {
-                record.M_importance = ((int)myItem.Importance).ToString();
-            }
-
-            record.M_sender = myItem.SenderName.Trim();
-
-            record.M_mailincometime = Convert.ToDateTime(myItem.ReceivedTime.ToString("G"));
-            record.JOBID = record.M_subject + "-" + DateTime.Now.ToString();
-            record.T1 = Convert.ToDateTime(DateTime.Now.ToString("G"));
-
-
-
-
-            string mailBody = myItem.Body.Trim();
-
-
-            record.M_statu = "0";
-            int? preAsignEmpId = 0;
-
-
-
-            string subjectStrGet = RegexHelper.ReplaceStrByRegex(@"RE:|FW:|回复：", record.M_subject, "");
-
-            string stationDepartment = RegexHelper.GetFirstStrByRegex(@"[A-Za-z]{3}\s+[A-Za-z]{3}", subjectStrGet);
-
-            string stationStr = "";
-            string departmentStr = "";
-
-            record.M_statue = "0";
-            record.M_asign = 0;
-
-            if (stationDepartment.Length > 6)
-            {
-                stationStr = stationDepartment.Substring(0, 3).Trim();
-                departmentStr = stationDepartment.Substring(stationDepartment.Length - 3, 3).Trim();
-            }
-
-
-            record.M_requestID = stationStr;
-            record.M_actiontype = departmentStr;
-
-
-            string saveMailName = new Guid().ToString() + myItem.ReceivedTime.ToString("yyyyMMddHHmmss") + mailNum.ToString();//邮件保存在公共盘上的名字
-
-            saveMailNamePath = MailHelper.MailFolder + saveMailName + ".msg";
-            record.M_filePath = saveMailNamePath;
-
-            record = preAsignRequestToReceivedRecord(record);
-
-            //将邮件记录添加到DB中
-            AddRecordToDB(record);
-
-
-
-
-        }
-
-
-        /// <summary>
-        /// 从subjectStr中匹配出StationCode
-        /// </summary>
-        /// <param name="subjectStr"></param>
-        /// <returns></returns>
-        private string FindStationCode(string subjectStr)
-        {
-            List<Emp> emps = FindAllEmpsForAllocate();
-            foreach (Emp emp in emps)
-            {
-
-                if (emp.M_station.Length > 0 && subjectStr.ToUpper().Contains(emp.M_station.ToUpper()))
+                foreach (String attachFilePath in attachmentsList)
                 {
-                    return emp.M_station;
-                }
+                    HawbTb hawbTb = new HawbTb();
 
-            }
-            return "";
-        }
-
-        /// <summary>
-        /// 给record预分配case
-        /// </summary>
-        /// <param name="record">要进行预分配的record</param>
-        /// <returns>record</returns>
-        private Record preAsignRequestToReceivedRecord(Record record)
-        {
-
-
-            //找出全部员工
-            List<Emp> allocateEmps = FindAllEmpsForAllocate();
-
-            //找出不可以用于分配的员工
-            HashSet<int?> couldNotAllocateIds = FindCouldNotAllocateEmps();
-
-            //员工表和要被分配的records的数量
-            int allocateEmpsCount = allocateEmps.Count;
-
-
-            int nextRequestEmpId = Emp.nextRequestEmpId;
-            int nextPoint = nextRequestEmpId - 1;//用于循环中从nextRequestEmpId指向下一个的指针
-
-            //分配case
-            for (int i = 0; i < allocateEmpsCount; i++)
-            {
-
-                //如果员工登录，并没有case在做,就分配case给该名员工
-                if (allocateEmps[nextPoint].M_login == "1" && allocateEmps[nextPoint].M_statue == "1" && allocateEmps[nextPoint].M_isAutoAsign == 1 && (!couldNotAllocateIds.Contains(allocateEmps[nextPoint].M_id)))
-                {
-
-                    record.M_asign = allocateEmps[nextPoint].M_id;
-
-                    record.M_statu = "4";
-                    nextRequestEmpId = allocateEmps[nextPoint].M_id + 1;
-
-
-                    if (nextRequestEmpId > allocateEmpsCount)
+                    if (myItem.Subject != null)
                     {
-                        nextRequestEmpId = 1;
+                        hawbTb.MailSubject = myItem.Subject.Trim();//邮件主题
                     }
 
-                    break;
 
-                }
-
-                nextPoint++;
-                if (nextPoint > allocateEmpsCount - 1)
-                {
-                    nextPoint = 0;
-                }
-
-            }
+                    hawbTb.MailIncomeTime = Convert.ToDateTime(myItem.ReceivedTime.ToString("G"));
 
 
-            Emp.nextRequestEmpId = nextRequestEmpId;
+                    hawbTb.FilePath = saveMailNamePath;
 
+                    string strFiles = File.ReadAllText(attachFilePath);
+                   
+                    strFiles = strFiles.Replace("<k>", "").Replace("<BR>", "\n");
 
-            return record;
-        }
+                    string 
 
-        /// <summary>
-        /// 将未asign的case分配给可以接收case的员工
-        /// </summary>
-        private void preAsignRequest()
-        {
-            //找出可以用于分配的员工
-            List<Emp> allocateEmps = FindAllEmpsForAllocate();
-            //找出可以用于分配的case
-            List<Record> allocateRecords = FindRecordsToAllocate();
+                    string tableMain=RegexHelper.GetFirstStrByRegex("<TABLE Border.+?</TABLE>", strFiles);
 
-            //找出不可以用于分配的员工
-            HashSet<int?> couldNotAllocateIds = FindCouldNotAllocateEmps();
-
-            //员工表和要被分配的records的数量
-            int allocateEmpsCount = allocateEmps.Count;
-            int allocateRecordsCount = allocateRecords.Count;
-
-            int nextRequestEmpId = Emp.nextRequestEmpId;
-            int nextPoint = nextRequestEmpId - 1;//用于循环中从nextRequestEmpId指向下一个的指针
-
-            //分配case
-            for (int i = 0; i < allocateEmpsCount; i++)
-            {
-
-                //如果员工登录，并没有case在做,就分配case给该名员工
-                if (allocateEmps[nextPoint].M_login == "1" && allocateEmps[nextPoint].M_statue == "1" && allocateEmps[nextPoint].M_isAutoAsign == 1 && (!couldNotAllocateIds.Contains(allocateEmps[nextPoint].M_id)))
-                {
-
-                    if (i < allocateRecordsCount)
+                    XmlDocument doc = new XmlDocument();
+                    doc.LoadXml(tableMain);
+                    XmlNodeList trs = doc.GetElementsByTagName("TR");
+                    XmlNodeList tds = trs[1].ChildNodes;
+                    foreach (XmlNode td in tds)
                     {
-
-
-                        allocateRecords[i].M_asign = allocateEmps[nextPoint].M_id;
-
-                        allocateRecords[i].M_statu = "4";
-                        nextRequestEmpId = allocateEmps[nextPoint].M_id + 1;
-                        if (nextRequestEmpId > allocateEmpsCount)
-                        {
-                            nextRequestEmpId = 1;
-                        }
-
+                        string strTd = td.InnerText;
+                        
                     }
 
-                }
+                    
 
-                nextPoint++;
-                if (nextPoint > allocateEmpsCount - 1)
+                }
+            }
+            else
+            {
+
+                HawbTb hawbTb = new HawbTb();
+
+                if (myItem.Subject != null)
                 {
-                    nextPoint = 0;
-                }
-
-            }
-
-
-            Emp.nextRequestEmpId = nextRequestEmpId;
-            BathUpdateRecordsToDB(allocateRecords);
-
-
-
-        }
-
-        private List<Emp> FindAllEmpsForAllocate()
-        {
-            List<Emp> emps = null;
-            try
-            {
-                OleDbConnection con = empDao.Begin();
-                emps = empDao.FindAllEmpDAO(con);
-                empDao.Commit();
-                return emps;
-            }
-            catch (Exception)
-            {
-                empDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                empDao.Close();
-            }
-
-        }
-
-        //查找不能够被分配case的项目
-        private HashSet<int?> FindCouldNotAllocateEmps()
-        {
-            HashSet<int?> empsIdsHashSet = new HashSet<int?>();
-            List<Record> empCouldNotAllocateList = null;
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                empCouldNotAllocateList = recordDao.FindCouldNotAllocateDAO(con);
-                recordDao.Commit();
-                foreach (Record record in empCouldNotAllocateList)
-                {
-                    empsIdsHashSet.Add(record.M_asign);
+                    hawbTb.MailSubject = myItem.Subject.Trim();//邮件主题
                 }
 
 
-                return empsIdsHashSet;
-            }
-            catch (Exception)
-            {
-                empDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                empDao.Close();
+
+                hawbTb.MailIncomeTime = Convert.ToDateTime(myItem.ReceivedTime.ToString("G"));
+
+
+                hawbTb.FilePath = saveMailNamePath;
+
+                //将邮件记录添加到DB中
+                //AddRecordToDB(hawbTb);
+
+
             }
 
-        }
 
-        private List<Record> FindRecordsToAllocate()
-        {
-            List<Record> records = null;
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                records = recordDao.FindRecordsToAllocateDAO(con);
-                recordDao.Commit();
-                return records;
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
+
+
+
+
 
         }
 
 
 
-
-
-
-        /// <summary>
-        ///按subjectStr寻找最近一次complete或incomplete的case，并且做这一票的Emp要在职，在线
-        /// </summary>
-        /// <param name="subjectStr"></param>
-        /// <returns></returns>
-        private int? FindRecordByRequest(string subjectStr)
-        {
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                int? asignId = recordDao.FindRecordByRequestIDDAO(con, subjectStr);
-                recordDao.Commit();
-                return asignId;
-
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
-
-        }
-
-        private void UpdateRecordToDB(Record record)
-        {
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                recordDao.UpdateRecordItemDAO(con, record);
-                recordDao.Commit();
-
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
-        }
-
-
-
-        private void BathUpdateRecordsToDB(List<Record> records)
-        {
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                foreach (Record record in records)
-                {
-                    recordDao.UpdateRecordItemDAO(con, record);
-                }
-
-                recordDao.Commit();
-
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
-        }
-
-        private void BathUpdateEmpsToDB(List<Emp> emps)
-        {
-            try
-            {
-                OleDbConnection con = empDao.Begin();
-                foreach (Emp emp in emps)
-                {
-                    empDao.UpdateEmpItemDAO(con, emp);
-                }
-
-                empDao.Commit();
-
-            }
-            catch (Exception)
-            {
-                empDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                empDao.Close();
-            }
-        }
-
-
+  
 
         /// <summary>
         /// 向数据库添加单条Record的记录 
         /// </summary>
         /// <param name="record"></param>
-        private void AddRecordToDB(Record record)
-        {
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                recordDao.AddRecordItemDAO(con, record);
-                recordDao.Commit();
+        //private void AddRecordToDB(HawbTb record)
+        //{
+        //    try
+        //    {
+        //        OleDbConnection con = recordDao.Begin();
+        //        recordDao.AddRecordItemDAO(con, record);
+        //        recordDao.Commit();
 
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
-        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        recordDao.RollBack();
+        //        throw;
+        //    }
+        //    finally
+        //    {
+        //        recordDao.Close();
+        //    }
+        //}
 
-        private void BathAddRecordsToDB(List<Record> records)
-        {
-            try
-            {
-                OleDbConnection con = recordDao.Begin();
-                foreach (Record record in records)
-                {
-                    recordDao.AddRecordItemDAO(con, record);
-                }
+        //private void BathAddRecordsToDB(List<Record> records)
+        //{
+        //    try
+        //    {
+        //        OleDbConnection con = recordDao.Begin();
+        //        foreach (Record record in records)
+        //        {
+        //            recordDao.AddRecordItemDAO(con, record);
+        //        }
 
-                recordDao.Commit();
+        //        recordDao.Commit();
 
-            }
-            catch (Exception)
-            {
-                recordDao.RollBack();
-                throw;
-            }
-            finally
-            {
-                recordDao.Close();
-            }
-        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        recordDao.RollBack();
+        //        throw;
+        //    }
+        //    finally
+        //    {
+        //        recordDao.Close();
+        //    }
+        //}
 
 
 

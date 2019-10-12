@@ -16,6 +16,8 @@ namespace AppleDailyReportTool.utils
         private static string OutboxName;
         //用于存储邮件的共享盘目录
         public static string MailFolder;
+        //用于存储邮件附件的目录
+        public static string AttachFolder;
 
         private static Outlook.Application myOutlookApp;
         private static Outlook.NameSpace myNameSpace;
@@ -31,7 +33,7 @@ namespace AppleDailyReportTool.utils
             SourceboxName = ConfigurationManager.AppSettings["SourceboxName"];
             OutboxName = ConfigurationManager.AppSettings["OutboxName"];
             MailFolder = ConfigurationManager.AppSettings["MailFolder"];
-
+            AttachFolder= ConfigurationManager.AppSettings["AttachFolder"];
 
             myOutlookApp = new Outlook.Application();
             myNameSpace = myOutlookApp.GetNamespace("MAPI");
