@@ -8,3 +8,4 @@ D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\x86\Debug\AppleDaily
 D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\x86\Debug\AppleDailyReportTool.csproj.CoreCompileInputs.cache
 D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\x86\Debug\AppleDailyReportTool.exe
 D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\x86\Debug\AppleDailyReportTool.pdb
+D:\VS2017WorkSpace\AppleReportTool\AppleDailyReportTool\obj\x86\Debug\AppleDailyReportTool.ui.FormDataBase.resources

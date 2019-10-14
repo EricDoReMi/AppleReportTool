@@ -38,6 +38,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.AutoStartTimer = new System.Windows.Forms.Timer(this.components);
+            this.SearchBtn = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnServerStart
@@ -130,11 +131,22 @@
             this.AutoStartTimer.Interval = 6000;
             this.AutoStartTimer.Tick += new System.EventHandler(this.AutoStartTimer_Tick);
             // 
+            // SearchBtn
+            // 
+            this.SearchBtn.Location = new System.Drawing.Point(173, 178);
+            this.SearchBtn.Name = "SearchBtn";
+            this.SearchBtn.Size = new System.Drawing.Size(123, 32);
+            this.SearchBtn.TabIndex = 11;
+            this.SearchBtn.Text = "Search";
+            this.SearchBtn.UseVisualStyleBackColor = true;
+            this.SearchBtn.Click += new System.EventHandler(this.SearchBtn_Click);
+            // 
             // ServerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(564, 328);
+            this.ClientSize = new System.Drawing.Size(351, 228);
+            this.Controls.Add(this.SearchBtn);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.dateTimePickerStopTime);
@@ -162,5 +174,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Timer AutoStartTimer;
+        private System.Windows.Forms.Button SearchBtn;
     }
 }

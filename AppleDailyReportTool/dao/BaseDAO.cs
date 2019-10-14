@@ -123,6 +123,30 @@ namespace AppleDailyReportTool.dao
             return adapter;
         }
 
+        protected List<E> queryDataTableEntity(OleDbConnection conn, string sqlStr, params OleDbParameter[] paras)
+        {
+
+            //调用query返回结果集
+            DataTable tb = SelectToDataTable(conn, sqlStr, paras);
+
+            //遍历结果集的数据封装成实体对象返回
+            List<E> list = new List<E>();
+
+            if (tb.Rows.Count > 0)
+            {
+
+                foreach (DataRow row in tb.Rows)
+                {
+                    list.Add(ToEntity(row));
+                }
+
+            }
+
+
+
+            return list;
+        }
+
         public OleDbConnection Begin()
         {
             OleDbConnection conn = OLDBHelper.GetConnection();
@@ -147,6 +171,9 @@ namespace AppleDailyReportTool.dao
             OLDBHelper.CloseConnection();
         }
 
+
+        //每个子类需要去重写的ToEntity方法
+        public abstract E ToEntity(DataRow dataRow);
 
         //每个子类需要去重写的ToEntity方法
         public abstract E ToEntity(OleDbDataReader reader);

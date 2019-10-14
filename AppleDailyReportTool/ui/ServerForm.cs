@@ -1,4 +1,5 @@
 ﻿using AppleDailyReportTool.thread;
+using AppleDailyReportTool.ui;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -96,6 +97,14 @@ namespace AppleDailyReportTool
         private void dateTimePickerStartTime_ValueChanged(object sender, EventArgs e)
         {
 
+        }
+
+
+        private void SearchBtn_Click(object sender, EventArgs e)
+        {
+            Form formDataBase = new FormDataBase();
+            
+            formDataBase.ShowDialog();
         }
     }
 }
